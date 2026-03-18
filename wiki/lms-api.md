@@ -2,9 +2,16 @@
 
 ## About the LMS API
 
-## LMS API port
+## LMS API host port
+
+The [port number](./computer-networks.md#port-number) (without `<` and `>`) which the [LMS API](#about-the-lms-api) is available at on the [host](./computer-networks.md#host).
+
+The port number is the value of [`LMS_API_HOST_PORT`](./dotenv-docker-secret.md#lms_api_host_port) in [`.env.docker.secret`](./dotenv-docker-secret.md#what-is-envdockersecret).
 
 ### `<lms-api-host-port>` placeholder
+
+The [LMS API host port](#lms-api-host-port).
+
 
 ## `Caddy`
 
