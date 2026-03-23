@@ -1,6 +1,7 @@
 import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+
 class Settings(BaseSettings):
     bot_token: str = "test-token"
     lms_api_base_url: str = "http://localhost:42002"
@@ -13,7 +14,8 @@ class Settings(BaseSettings):
         # We need to find the file from both se-toolkit-lab-7/ and se-toolkit-lab-7/bot/
         env_file=(".env.bot.secret", "../.env.bot.secret"),
         env_file_encoding="utf-8",
-        extra="ignore"
+        extra="ignore",
     )
+
 
 config = Settings()
