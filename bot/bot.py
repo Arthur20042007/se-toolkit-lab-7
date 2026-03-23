@@ -5,7 +5,7 @@ from aiogram.filters import CommandStart, Command
 
 # Bot-level imports
 from config import config
-from handlers.commands import handle_text
+from handlers.commands.messages import handle_text
 
 
 async def main():
