@@ -23,13 +23,13 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     --mount=type=bind,source=bot/pyproject.toml,target=bot/pyproject.toml \
-    uv sync --no-install-project
+    uv sync --no-install-project --frozen
 
 COPY bot /app/bot
 COPY pyproject.toml uv.lock /app/
 
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync
+    uv sync --frozen
 
 # ---
 # Stage 2: use a final image without uv
