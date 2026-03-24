@@ -165,8 +165,23 @@ class LLMService:
             while response_message.tool_calls and iterations < 10:
                 iterations += 1
                 
-                # Append the assistant's tool calls message using model_dump to ensure clean dict for serialization
-                messages.append(response_message.model_dump())
+                # Manually cleanly convert assistant msg since provider is very picky
+                assistant_msg = {
+                    "role": "assistant",
+                    "content": response_message.content or "",
+                }
+                if response_message.tool_calls:
+                    assistant_msg["tool_calls"] = []
+                    for tc in response_message.tool_calls:
+                        assistant_msg["tool_calls"].append({
+                            "id": tc.id,
+                            "type": "function",
+                            "function": {
+                                "name": tc.function.name,
+                                "arguments": tc.function.arguments
+                            }
+                        })
+                messages.append(assistant_msg)
                 
                 tool_results_count = 0
                 for tool_call in response_message.tool_calls:

@@ -41,26 +41,38 @@ class BackendClient:
     async def get_learners(self):
         return await self._get("/learners/")
 
+    def _normalize_lab(self, lab: str) -> str:
+        if not lab: return lab
+        import re
+        # If it's already 'lab-XX' just return it
+        if re.match(r'^lab-\d{2}$', lab): return lab
+        # Try to find a number and format it
+        m = re.search(r'\d+', lab)
+        if m:
+            num = int(m.group())
+            return f"lab-{num:02d}"
+        return lab
+
     async def get_scores_distribution(self, lab: str):
-        return await self._get("/analytics/scores", params={"lab": lab})
+        return await self._get("/analytics/scores", params={"lab": self._normalize_lab(lab)})
 
     async def get_scores(self, lab: str):
-        return await self._get("/analytics/pass-rates", params={"lab": lab})
+        return await self._get("/analytics/pass-rates", params={"lab": self._normalize_lab(lab)})
         
     async def get_pass_rates(self, lab: str):
-        return await self._get("/analytics/pass-rates", params={"lab": lab})
+        return await self._get("/analytics/pass-rates", params={"lab": self._normalize_lab(lab)})
 
     async def get_timeline(self, lab: str):
-        return await self._get("/analytics/timeline", params={"lab": lab})
+        return await self._get("/analytics/timeline", params={"lab": self._normalize_lab(lab)})
 
     async def get_groups(self, lab: str):
-        return await self._get("/analytics/groups", params={"lab": lab})
+        return await self._get("/analytics/groups", params={"lab": self._normalize_lab(lab)})
 
     async def get_top_learners(self, lab: str, limit: int = 5):
-        return await self._get("/analytics/top-learners", params={"lab": lab, "limit": limit})
+        return await self._get("/analytics/top-learners", params={"lab": self._normalize_lab(lab), "limit": limit})
 
     async def get_completion_rate(self, lab: str):
-        return await self._get("/analytics/completion-rate", params={"lab": lab})
+        return await self._get("/analytics/completion-rate", params={"lab": self._normalize_lab(lab)})
 
     async def trigger_sync(self):
         return await self._post("/pipeline/sync", json={})
