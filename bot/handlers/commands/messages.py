@@ -1,6 +1,7 @@
 from services.backend import backend_client
 from services.llm import llm_service
 
+
 async def handle_text(text: str) -> str:
     """
     Core logic handler separated from Telegram transport.
@@ -51,7 +52,7 @@ async def handle_text(text: str) -> str:
             labs = [item for item in items if item.get("type", "") == "lab"]
             if not labs:
                 return "No labs available at the moment."
-            
+
             lines = ["Available labs:"]
             for lab in labs:
                 lines.append(f"- {lab.get('title')}")
@@ -63,6 +64,6 @@ async def handle_text(text: str) -> str:
 
     if text.startswith("/"):
         return "Unknown command. Use /help to see available commands."
-    
+
     # Use LLM for everything else
     return await llm_service.chat(text)
