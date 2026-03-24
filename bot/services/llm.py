@@ -141,7 +141,7 @@ class LLMService:
         messages = [
             {
                 "role": "system",
-                "content": "You are a helpful teaching assistant bot. Use tools to fetch data to answer the user's questions about labs, scores, and students. If the user asks general questions or you don't need tools, answer naturally."
+                "content": "You are a helpful teaching assistant bot. You MUST use tools to fetch data to answer the user's questions about labs, scores, and students! Whenever a user asks for data such as pass rate, scores, sync or learners, ALWAYS call the corresponding backend tool."
             },
             {"role": "user", "content": user_message}
         ]
