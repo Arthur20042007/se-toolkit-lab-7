@@ -4,6 +4,7 @@ from openai import AsyncOpenAI
 from config import config
 from services.backend import backend_client
 
+
 class LLMService:
     def __init__(self):
         self.client = AsyncOpenAI(
@@ -11,7 +12,7 @@ class LLMService:
             base_url=config.llm_api_base_url,
         )
         self.model = config.llm_api_model
-        
+
         # Define the tools
         self.tools = [
             {
@@ -38,7 +39,10 @@ class LLMService:
                     "parameters": {
                         "type": "object",
                         "properties": {
-                            "lab": {"type": "string", "description": "Lab identifier, e.g. 'lab-01'"}
+                            "lab": {
+                                "type": "string",
+                                "description": "Lab identifier, e.g. 'lab-01'",
+                            }
                         },
                         "required": ["lab"],
                     },
@@ -52,7 +56,10 @@ class LLMService:
                     "parameters": {
                         "type": "object",
                         "properties": {
-                            "lab": {"type": "string", "description": "Lab identifier, e.g. 'lab-01'"}
+                            "lab": {
+                                "type": "string",
+                                "description": "Lab identifier, e.g. 'lab-01'",
+                            }
                         },
                         "required": ["lab"],
                     },
@@ -66,7 +73,10 @@ class LLMService:
                     "parameters": {
                         "type": "object",
                         "properties": {
-                            "lab": {"type": "string", "description": "Lab identifier, e.g. 'lab-01'"}
+                            "lab": {
+                                "type": "string",
+                                "description": "Lab identifier, e.g. 'lab-01'",
+                            }
                         },
                         "required": ["lab"],
                     },
@@ -80,7 +90,10 @@ class LLMService:
                     "parameters": {
                         "type": "object",
                         "properties": {
-                            "lab": {"type": "string", "description": "Lab identifier, e.g. 'lab-01'"}
+                            "lab": {
+                                "type": "string",
+                                "description": "Lab identifier, e.g. 'lab-01'",
+                            }
                         },
                         "required": ["lab"],
                     },
@@ -94,8 +107,14 @@ class LLMService:
                     "parameters": {
                         "type": "object",
                         "properties": {
-                            "lab": {"type": "string", "description": "Lab identifier, e.g. 'lab-01'"},
-                            "limit": {"type": "integer", "description": "Number of top learners to return (default 5)"}
+                            "lab": {
+                                "type": "string",
+                                "description": "Lab identifier, e.g. 'lab-01'",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "description": "Number of top learners to return (default 5)",
+                            },
                         },
                         "required": ["lab"],
                     },
@@ -109,7 +128,10 @@ class LLMService:
                     "parameters": {
                         "type": "object",
                         "properties": {
-                            "lab": {"type": "string", "description": "Lab identifier, e.g. 'lab-01'"}
+                            "lab": {
+                                "type": "string",
+                                "description": "Lab identifier, e.g. 'lab-01'",
+                            }
                         },
                         "required": ["lab"],
                     },
@@ -124,7 +146,7 @@ class LLMService:
                 },
             },
         ]
-        
+
         self.available_functions = {
             "get_items": backend_client.get_items,
             "get_learners": backend_client.get_learners,
@@ -141,9 +163,9 @@ class LLMService:
         messages = [
             {
                 "role": "system",
-                "content": "You are a helpful teaching assistant bot. You MUST use tools to fetch data to answer the user's questions about labs, scores, and students! Whenever a user asks for data such as pass rate, scores, sync or learners, ALWAYS call the corresponding backend tool."
+                "content": "You are a helpful teaching assistant bot. You MUST use tools to fetch data to answer the user's questions about labs, scores, and students! Whenever a user asks for data such as pass rate, scores, sync or learners, ALWAYS call the corresponding backend tool.",
             },
-            {"role": "user", "content": user_message}
+            {"role": "user", "content": user_message},
         ]
 
         try:
@@ -153,18 +175,18 @@ class LLMService:
                 messages=messages,
                 tools=self.tools,
             )
-            
+
             response_message = response.choices[0].message
-            
+
             # If no tool calls, just return the response
             if not response_message.tool_calls:
                 return response_message.content or "I couldn't process that."
-                
+
             # Keep looping until LLM stops calling tools (max 10 iterations to prevent infinite loops)
             iterations = 0
             while response_message.tool_calls and iterations < 10:
                 iterations += 1
-                
+
                 # Manually cleanly convert assistant msg since provider is very picky
                 assistant_msg = {
                     "role": "assistant",
@@ -173,42 +195,63 @@ class LLMService:
                 if response_message.tool_calls:
                     assistant_msg["tool_calls"] = []
                     for tc in response_message.tool_calls:
-                        assistant_msg["tool_calls"].append({
-                            "id": tc.id,
-                            "type": "function",
-                            "function": {
-                                "name": tc.function.name,
-                                "arguments": tc.function.arguments or "{}"
+                        assistant_msg["tool_calls"].append(
+                            {
+                                "id": tc.id,
+                                "type": "function",
+                                "function": {
+                                    "name": tc.function.name,
+                                    "arguments": tc.function.arguments or "{}",
+                                },
                             }
-                        })
+                        )
                 messages.append(assistant_msg)
-                
+
                 tool_results_count = 0
                 for tool_call in response_message.tool_calls:
                     function_name = tool_call.function.name
-                    args_text = tool_call.function.arguments.strip() if tool_call.function.arguments else "{}"
+                    args_text = (
+                        tool_call.function.arguments.strip()
+                        if tool_call.function.arguments
+                        else "{}"
+                    )
                     function_args = json.loads(args_text) if args_text else {}
-                    
-                    print(f"[tool] LLM called: {function_name}({function_args})", file=sys.stderr)
-                    
+
+                    print(
+                        f"[tool] LLM called: {function_name}({function_args})",
+                        file=sys.stderr,
+                    )
+
                     function_to_call = self.available_functions.get(function_name)
                     if function_to_call:
                         try:
                             # Call the function (don't pass kwargs to no-arg functions)
-                            if function_name in ["get_items", "get_learners", "trigger_sync"]:
+                            if function_name in [
+                                "get_items",
+                                "get_learners",
+                                "trigger_sync",
+                            ]:
                                 function_response = await function_to_call()
                             else:
-                                function_response = await function_to_call(**function_args)
+                                function_response = await function_to_call(
+                                    **function_args
+                                )
                             result_str = json.dumps(function_response)
                             # Or better print the size
-                            print(f"[tool] Result: return value of type {type(function_response)}", file=sys.stderr)
+                            print(
+                                f"[tool] Result: return value of type {type(function_response)}",
+                                file=sys.stderr,
+                            )
                         except Exception as e:
                             result_str = f"Error calling {function_name}: {str(e)}"
                             print(f"[tool] Error: {result_str}", file=sys.stderr)
                     else:
                         result_str = f"Error: Tool {function_name} not found"
-                        print(f"[tool] Error: Tool {function_name} not found", file=sys.stderr)
-                        
+                        print(
+                            f"[tool] Error: Tool {function_name} not found",
+                            file=sys.stderr,
+                        )
+
                     messages.append(
                         {
                             "tool_call_id": tool_call.id,
@@ -218,9 +261,12 @@ class LLMService:
                         }
                     )
                     tool_results_count += 1
-                    
-                print(f"[summary] Feeding {tool_results_count} tool results back to LLM", file=sys.stderr)
-                
+
+                print(
+                    f"[summary] Feeding {tool_results_count} tool results back to LLM",
+                    file=sys.stderr,
+                )
+
                 # Call LLM again with tool results
                 response = await self.client.chat.completions.create(
                     model=self.model,
@@ -229,11 +275,16 @@ class LLMService:
                 )
                 response_message = response.choices[0].message
 
-            return response_message.content or "I finished my tasks but don't have a final answer."
+            return (
+                response_message.content
+                or "I finished my tasks but don't have a final answer."
+            )
 
         except Exception as e:
             import traceback
+
             traceback.print_exc()
             return f"LLM Error: {str(e)}"
+
 
 llm_service = LLMService()

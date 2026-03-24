@@ -27,18 +27,18 @@ async def main():
     @dp.message(CommandStart())
     async def start_handler(message: types.Message):
         response = await handle_text("/start")
-        
+
         # Create an inline keyboard for quick exploration
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [
-                InlineKeyboardButton(text="Labs", callback_data="btn_labs"),
-                InlineKeyboardButton(text="Health", callback_data="btn_health"),
-            ],
-            [
-                InlineKeyboardButton(text="Top Students", callback_data="btn_top")
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(text="Labs", callback_data="btn_labs"),
+                    InlineKeyboardButton(text="Health", callback_data="btn_health"),
+                ],
+                [InlineKeyboardButton(text="Top Students", callback_data="btn_top")],
             ]
-        ])
-        
+        )
+
         await message.answer(response, reply_markup=keyboard)
 
     @dp.callback_query()
@@ -52,7 +52,7 @@ async def main():
             response = await handle_text("who are the top students")
         else:
             response = "Unknown button"
-            
+
         await callback.message.answer(response)
         await callback.answer()
 

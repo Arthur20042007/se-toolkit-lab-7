@@ -95,3 +95,12 @@ By the end of this lab, you should be able to say:
 ### Optional
 
 1. [Flutter Web Chatbot](./lab/tasks/optional/task-1.md)
+
+## Deploy
+
+To deploy the application, run the following commands:
+
+1. Ensure that your `.env.docker.secret` file is populated with the correct variables, including `TELEGRAM_BOT_TOKEN` and `QWEN_CODE_API_KEY`.
+2. Run `docker compose --env-file .env.docker.secret up --build -d`.
+3. The bot will start up and connect to the backend automatically.
+
