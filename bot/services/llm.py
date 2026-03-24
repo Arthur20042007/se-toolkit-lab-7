@@ -178,7 +178,7 @@ class LLMService:
                             "type": "function",
                             "function": {
                                 "name": tc.function.name,
-                                "arguments": tc.function.arguments
+                                "arguments": tc.function.arguments or "{}"
                             }
                         })
                 messages.append(assistant_msg)
@@ -186,15 +186,19 @@ class LLMService:
                 tool_results_count = 0
                 for tool_call in response_message.tool_calls:
                     function_name = tool_call.function.name
-                    function_args = json.loads(tool_call.function.arguments) if tool_call.function.arguments else {}
+                    args_text = tool_call.function.arguments.strip() if tool_call.function.arguments else "{}"
+                    function_args = json.loads(args_text) if args_text else {}
                     
                     print(f"[tool] LLM called: {function_name}({function_args})", file=sys.stderr)
                     
                     function_to_call = self.available_functions.get(function_name)
                     if function_to_call:
                         try:
-                            # Call the function
-                            function_response = await function_to_call(**function_args)
+                            # Call the function (don't pass kwargs to no-arg functions)
+                            if function_name in ["get_items", "get_learners", "trigger_sync"]:
+                                function_response = await function_to_call()
+                            else:
+                                function_response = await function_to_call(**function_args)
                             result_str = json.dumps(function_response)
                             # Or better print the size
                             print(f"[tool] Result: return value of type {type(function_response)}", file=sys.stderr)
@@ -228,6 +232,8 @@ class LLMService:
             return response_message.content or "I finished my tasks but don't have a final answer."
 
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             return f"LLM Error: {str(e)}"
 
 llm_service = LLMService()
