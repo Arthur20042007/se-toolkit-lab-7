@@ -2,6 +2,7 @@ import sys
 import asyncio
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import CommandStart, Command
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 # Bot-level imports
 from config import config
@@ -26,7 +27,34 @@ async def main():
     @dp.message(CommandStart())
     async def start_handler(message: types.Message):
         response = await handle_text("/start")
-        await message.answer(response)
+        
+        # Create an inline keyboard for quick exploration
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [
+                InlineKeyboardButton(text="Labs", callback_data="btn_labs"),
+                InlineKeyboardButton(text="Health", callback_data="btn_health"),
+            ],
+            [
+                InlineKeyboardButton(text="Top Students", callback_data="btn_top")
+            ]
+        ])
+        
+        await message.answer(response, reply_markup=keyboard)
+
+    @dp.callback_query()
+    async def callback_handler(callback: types.CallbackQuery):
+        data = callback.data
+        if data == "btn_labs":
+            response = await handle_text("/labs")
+        elif data == "btn_health":
+            response = await handle_text("/health")
+        elif data == "btn_top":
+            response = await handle_text("who are the top students")
+        else:
+            response = "Unknown button"
+            
+        await callback.message.answer(response)
+        await callback.answer()
 
     @dp.message(Command("help"))
     async def help_handler(message: types.Message):

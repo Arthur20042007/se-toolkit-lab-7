@@ -1,4 +1,5 @@
 from services.backend import backend_client
+from services.llm import llm_service
 
 async def handle_text(text: str) -> str:
     """
@@ -63,5 +64,5 @@ async def handle_text(text: str) -> str:
     if text.startswith("/"):
         return "Unknown command. Use /help to see available commands."
     
-    # Fallback to LLM / Agent intent routing in later tasks
-    return f"You said: {text}. I don't know how to process that yet."
+    # Use LLM for everything else
+    return await llm_service.chat(text)
